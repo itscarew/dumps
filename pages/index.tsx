@@ -1,11 +1,63 @@
 import Head from 'next/head'
 import Image from 'next/image'
-import { Inter } from '@next/font/google'
-import styles from '@/styles/Home.module.css'
-
-const inter = Inter({ subsets: ['latin'] })
+import Table from '@/components/table'
+import axios from 'axios'
+import { useEffect, useState } from 'react'
+import Modal from '@/components/modal'
+import { UserColumns } from "./utils/columns"
 
 export default function Home() {
+  const [users, setUsers] = useState([])
+  const getUsers = async () => {
+    try {
+      const res = await axios.get(`https://dummyjson.com/users`)
+      setUsers(res.data.users)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  const [rows, setRows] = useState([])
+  const [eachRow, setEachRow] = useState<any>()
+  const [isOpen, setIsOpen] = useState(false)
+  const [searchUsers, setSerchUsers] = useState([])
+  const [isFiltering, setIsFiltering] = useState<boolean>(false)
+
+  const [searchValue, setSearchValue] = useState("")
+  const handleChange = (e) => {
+    setSearchValue(e.target.value)
+  }
+  const [selectValue, setSelectValue] = useState("")
+  const handleSelectChange = (e) => {
+    setSelectValue(e.target.value)
+  }
+
+  const handleUpdatedData = () => {
+    const filteredUsers = users.filter((user) => {
+      return user[selectValue].toString().toLowerCase().includes(searchValue.toLowerCase())
+    })
+    setSerchUsers(filteredUsers)
+  }
+
+
+  useEffect(() => {
+    getUsers()
+  }, [])
+
+  useEffect(() => {
+    handleUpdatedData()
+    if (searchValue.length > 0) {
+      setIsFiltering(true)
+    }
+  }, [searchValue])
+
+  useEffect(() => {
+    setSelectValue("firstName")
+  }, [])
+
+  const filterColumn = UserColumns.filter((column) => {
+    return column.id !== "image" && column.id !== "birthDate"
+  })
+
   return (
     <>
       <Head>
@@ -15,9 +67,53 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div>
-        Tailwind Next JS
+      <div className='bg-black min-h-screen ' >
+        <div className='w-5/6 mx-auto p-6' >
+          <div className='flex items-center' >
+            <input
+              type={`${selectValue === "age" ? "number" : "text"}`}
+              placeholder="Filter ..."
+              className='my-3 p-2 outline-none w-80 bg-black text-white border  border-white'
+              value={searchValue} onChange={handleChange}
+            />
+            <select className='my-3 p-2 ml-3 outline-none bg-black text-white border  border-white ' onChange={handleSelectChange} >
+              {filterColumn.map((column) => {
+                return (<option key={column.id} value={column.id}> {column.name} </option>)
+              })}
+            </select>
+            <p className='text-white capitalize text-medium ml-3' >You are currently filtering by  {selectValue}</p>
+          </div>
+
+          <Table
+            columns={UserColumns}
+            data={isFiltering ? searchUsers : users}
+            setSelectedRow={(selectableRows) => setRows(selectableRows)}
+            setEachRow={(row) => setEachRow(row)}
+            setIsOpen={setIsOpen}
+          />
+
+          <div className='mt-5' >
+            <h1 className='text-xl text-white' >Name of Users Selected :</h1>
+            <ol className='flex flex-col list-disc ' >
+              {rows.map((row) => {
+                return (<li key={row.id} className="text-xl text-white" > {row.firstName} {row.lastName} </li>)
+              })}
+            </ol>
+          </div>
+        </div>
       </div>
+
+      <Modal isOpen={isOpen} setIsOpen={setIsOpen} >
+        <>
+          <div className='flex flex-col' >
+            <span > {eachRow?.firstName} {eachRow?.lastName} </span>
+            <span > {eachRow?.email} </span>
+            <span > {eachRow?.phone}  </span>
+            <span > {eachRow?.username}  </span>
+            <span > {eachRow?.birthDate}  </span>
+          </div>
+        </>
+      </Modal>
     </>
   )
 }
