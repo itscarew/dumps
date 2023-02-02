@@ -15,7 +15,7 @@ export default function Table(props) {
         props.setIsOpen(true)
       }}
       pagination
-      fixedHeader
+      // fixedHeader
       highlightOnHover
       pointerOnHover
       responsive

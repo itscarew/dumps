@@ -1,4 +1,5 @@
 import Image from "next/image";
+import moment from "moment";
 
 export const UserColumns = [
   {
@@ -65,6 +66,7 @@ export const UserColumns = [
     id: "birthDate",
     name: "Date of Birth",
     selector: (row) => row.birthDate,
+    format: (row) => moment(row.birthDate).format("ll"),
     sortable: true,
   },
 ];

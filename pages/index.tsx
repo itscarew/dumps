@@ -1,25 +1,23 @@
 import Head from 'next/head'
-import Image from 'next/image'
 import Table from '@/components/table'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import Modal from '@/components/modal'
 import { UserColumns } from "./utils/columns"
+import DatePicker from "react-datepicker";
+import moment from 'moment'
 
 export default function Home() {
   const [users, setUsers] = useState([])
   const getUsers = async () => {
-    try {
-      const res = await axios.get(`https://dummyjson.com/users`)
-      setUsers(res.data.users)
-    } catch (error) {
-      console.log(error)
-    }
+    const res = await axios.get(`https://dummyjson.com/users`)
+    setUsers(res.data.users)
   }
+
   const [rows, setRows] = useState([])
   const [eachRow, setEachRow] = useState<any>()
   const [isOpen, setIsOpen] = useState(false)
-  const [searchUsers, setSerchUsers] = useState([])
+  const [searchUsers, setSearchUsers] = useState([])
   const [isFiltering, setIsFiltering] = useState<boolean>(false)
 
   const [searchValue, setSearchValue] = useState("")
@@ -35,9 +33,8 @@ export default function Home() {
     const filteredUsers = users.filter((user) => {
       return user[selectValue].toString().toLowerCase().includes(searchValue.toLowerCase())
     })
-    setSerchUsers(filteredUsers)
+    setSearchUsers(filteredUsers)
   }
-
 
   useEffect(() => {
     getUsers()
@@ -45,9 +42,7 @@ export default function Home() {
 
   useEffect(() => {
     handleUpdatedData()
-    if (searchValue.length > 0) {
-      setIsFiltering(true)
-    }
+    setIsFiltering(true)
   }, [searchValue])
 
   useEffect(() => {
@@ -57,6 +52,30 @@ export default function Home() {
   const filterColumn = UserColumns.filter((column) => {
     return column.id !== "image" && column.id !== "birthDate"
   })
+
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(null);
+  const onChange = (dates) => {
+    const [start, end] = dates;
+    setStartDate(start);
+    setEndDate(end);
+  };
+
+  const handleUpdatedDataByDate = () => {
+    const filteredUsers = users.filter((user) => {
+      return moment(user.birthDate).isBetween(startDate, endDate);
+    })
+    setSearchUsers(filteredUsers)
+  }
+
+  useEffect(() => {
+    if (endDate === null) {
+      setIsFiltering(false)
+    } else {
+      handleUpdatedDataByDate()
+      setIsFiltering(true)
+    }
+  }, [endDate])
 
   return (
     <>
@@ -69,19 +88,37 @@ export default function Home() {
 
       <div className='bg-black min-h-screen ' >
         <div className='w-5/6 mx-auto p-6' >
-          <div className='flex items-center' >
-            <input
-              type={`${selectValue === "age" ? "number" : "text"}`}
-              placeholder="Filter ..."
-              className='my-3 p-2 outline-none w-80 bg-black text-white border  border-white'
-              value={searchValue} onChange={handleChange}
-            />
-            <select className='my-3 p-2 ml-3 outline-none bg-black text-white border  border-white ' onChange={handleSelectChange} >
-              {filterColumn.map((column) => {
-                return (<option key={column.id} value={column.id}> {column.name} </option>)
-              })}
-            </select>
-            <p className='text-white capitalize text-medium ml-3' >You are currently filtering by  {selectValue}</p>
+          <div className='flex items-center justify-between' >
+            <div className='flex items-center' >
+              <input
+                type={`${selectValue === "age" ? "number" : "text"}`}
+                placeholder="Filter ..."
+                className='my-3 p-2 outline-none w-80 bg-black text-white border  border-white'
+                value={searchValue} onChange={handleChange}
+              />
+              <select className='my-3 p-2 ml-3 outline-none bg-black text-white border  border-white ' onChange={handleSelectChange} >
+                {filterColumn.map((column) => {
+                  return (<option key={column.id} value={column.id}> {column.name} </option>)
+                })}
+              </select>
+              <p className='text-white capitalize text-medium ml-3' >You are currently filtering by  {selectValue}</p>
+            </div>
+            <div>
+              <DatePicker
+                className='my-3 p-2 outline-none w-80 bg-black text-white border  border-white'
+                selected={startDate}
+                onChange={onChange}
+                startDate={startDate}
+                endDate={endDate}
+                showYearDropdown
+                scrollableYearDropdown
+                yearDropdownItemNumber={50}
+                selectsRange
+                monthsShown={2}
+                isClearable
+                placeholderText='Filter Date of Birth'
+              />
+            </div>
           </div>
 
           <Table
