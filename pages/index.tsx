@@ -90,12 +90,22 @@ export default function Home() {
         <div className='w-5/6 mx-auto p-6' >
           <div className='flex items-center justify-between' >
             <div className='flex items-center' >
-              <input
-                type={`${selectValue === "age" ? "number" : "text"}`}
-                placeholder="Filter ..."
-                className='my-3 p-2 outline-none w-80 bg-black text-white border  border-white'
-                value={searchValue} onChange={handleChange}
-              />
+
+
+              {selectValue === "gender" ?
+                <select className='my-3 p-2 outline-none bg-black text-white border  border-white ' onChange={handleChange} placeholder="CHoose" >
+                  {["Male", "Female"].map((column, index) => {
+                    return (<option key={index} value={column} > {column} </option>)
+                  })}
+                </select> :
+                <input
+                  type={`${selectValue === "age" ? "number" : "text"}`}
+                  placeholder="Filter ..."
+                  className='my-3 p-2 outline-none w-80 bg-black text-white border  border-white'
+                  value={searchValue} onChange={handleChange}
+                />}
+
+
               <select className='my-3 p-2 ml-3 outline-none bg-black text-white border  border-white ' onChange={handleSelectChange} >
                 {filterColumn.map((column) => {
                   return (<option key={column.id} value={column.id}> {column.name} </option>)
